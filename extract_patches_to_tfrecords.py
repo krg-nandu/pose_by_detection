@@ -80,13 +80,13 @@ def main(
         config=None
 ):
     data_prop = config.data_prop
-    jnts = load_joints(video_name,
-                       label_folder,
-                       objects_to_include)
+    jnts = load_joints(video_name=video_name,
+                       label_folder=label_folder,
+                       objects_to_include=objects_to_include,
+                       joints=config.joints_to_extract)
 
     # data structure to hold patches in memory
-    all_patches = []
-    all_labels = []
+    all_patches, all_labels = [], []
 
     # Load in the video to read
     video_stream = cv2.VideoCapture(os.path.join(video_folder, video_name))
@@ -98,10 +98,12 @@ def main(
         assert flag, 'Reading from video has failed!'
 
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        patches, labels = make_image_patches(rgb_frame,
-                                             frameid,
-                                             jnts,
-                                             objects_to_include)
+        patches, labels = make_image_patches(rgb_frame=rgb_frame,
+                                             frameid=frameid,
+                                             locations=jnts,
+                                             objects_to_include=objects_to_include,
+                                             joints=config.joints_to_extract,
+                                             patch_size=config.image_target_size[:,:,0])
         all_patches.extend(patches)
         all_labels.extend(labels)
         frameid = frameid + 1
@@ -117,7 +119,7 @@ def main(
 
     all_patches = np.asarray(all_patches)[arr]
     all_labels = np.asarray(all_labels)[arr]
-    # assert (data_prop not None), 'Train vs Test split is not specified'
+    assert (np.sum(data_prop.values()) != 1.), 'Train vs Test split specified incorrectly'
 
     train_idx_lim = int(data_prop['train'] * total_items)
     val_idx_lim = int((data_prop['train'] + data_prop['val']) * total_items)

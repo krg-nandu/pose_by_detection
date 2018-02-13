@@ -5,13 +5,10 @@ from __future__ import print_function
 import argparse
 import sys
 import tempfile
-
-from tensorflow.examples.tutorials.mnist import input_data
-
+import os
 import tensorflow as tf
-
-FLAGS = None
-
+import config
+from tf_data_handler import inputs
 
 def deepnn(x):
     """deepnn builds the graph for a deep net for classifying digits.
@@ -97,10 +94,10 @@ def bias_variable(shape):
     return tf.Variable(initial)
 
 
-def main(_):
+def main(config):
     # import ipdb; ipdb.set_trace();
     # Import data
-    mnist = input_data.read_data_sets(FLAGS.data_dir)
+    #mnist = input_data.read_data_sets(FLAGS.data_dir)
 
     # Create the model
     x = tf.placeholder(tf.float32, [None, 784])
@@ -129,20 +126,51 @@ def main(_):
     train_writer = tf.summary.FileWriter(graph_location)
     train_writer.add_graph(tf.get_default_graph())
 
-    with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
-        for i in range(20000):
-            batch = mnist.train.next_batch(50)
-            if i % 100 == 0:
-                train_accuracy = accuracy.eval(feed_dict={
-                    x: batch[0], y_: batch[1], keep_prob: 1.0})
-                print('step %d, training accuracy %g' % (i, train_accuracy))
-            train_step.run(feed_dict={x: batch[0], y_: batch[1], keep_prob: 0.5})
+    train_data = os.path.join(config.tfrecord_dir, config.train_tfrecords)
+    val_data = os.path.join(config.tfrecord_dir, config.val_tfrecords)
 
-        print(mnist.test.images.shape, mnist.test.labels.shape)
-        print('test accuracy %g' % accuracy.eval(feed_dict={
-            x: mnist.test.images, y_: mnist.test.labels, keep_prob: 1.0}))
+    with tf.device('/cpu:0'):
+        train_images, train_labels = inputs(tfrecord_file=train_data,
+                                            num_epochs=config.epochs,
+                                            image_target_size=config.image_target_size,
+                                            label_shape=config.num_classes,
+                                            batch_size=config.train_batch)
 
+        val_images, val_labels = inputs(tfrecord_file=val_data,
+                                        num_epochs=config.epochs,
+                                        image_target_size=config.image_target_size,
+                                        label_shape=config.num_classes,
+                                        batch_size=config.val_batch)
+
+
+    gpuconfig = tf.ConfigProto()
+    gpuconfig.gpu_options.allow_growth = True
+    gpuconfig.allow_soft_placement = True
+
+    with tf.Session(config=gpuconfig) as sess:
+        sess.run( tf.group(
+            tf.global_variables_initializer(),
+            tf.local_variables_initializer()) )
+        coord = tf.train.Coordinator()
+        threads = tf.train.start_queue_runners(coord=coord)
+        step = 0
+        try:
+            while not coord.should_stop():
+                #batch = mnist.train.next_batch(50)
+                train_step.run(feed_dict={x: train_images, y_: train_labels, keep_prob: 0.5})
+                if step % 100 == 0:
+                    train_accuracy = accuracy.eval(feed_dict={
+                        x: train_images, y_: train_labels, keep_prob: 1.0})
+                    print('step %d, training accuracy %g' % (step, train_accuracy))
+                step += 1
+                # print(val_images.shape, val_labels.shape)
+                # print('validation accuracy %g' % accuracy.eval(feed_dict={
+                #     x: val_images, y_: val_labels, keep_prob: 1.0}))
+        except tf.errors.OutofRangeError:
+            print ("Finished training for %d epochs"%config.epochs)
+        finally:
+            coord.request_stop()
+        coord.join(threads)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -150,4 +178,6 @@ if __name__ == '__main__':
                         default='/tmp/tensorflow/mnist/input_data',
                         help='Directory for storing input data')
     FLAGS, unparsed = parser.parse_known_args()
-tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
+    config = config.Config()
+    main(config)
+    #tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)

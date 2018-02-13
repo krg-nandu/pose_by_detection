@@ -7,7 +7,8 @@ class Config(object):
         self.label_dir = '/media/data_cifs/lakshmi/zebrafish/groundtruths/'
         self.tfrecord_dir = '/media/data_cifs/lakshmi/tfrecords/'
 
-        self.objects_to_include = ['0','1','2','3','4','5'] #fish ids to use!
+        self.objects_to_include = [0,1,2,3,4,5] #fish ids to use!
+        self.joints_to_extract = [0]
         self.data_prop = {'train':0.75,'val':0.1,'test':0.15}
 
         #tfrecords configuration

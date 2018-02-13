@@ -34,6 +34,7 @@ def inputs(
         tfrecord_file,
         num_epochs,
         image_target_size,
+        label_shape,
         batch_size):
     with tf.name_scope('input'):
         if os.path.exists(tfrecord_file) is False:
@@ -43,7 +44,7 @@ def inputs(
             'label': tf.FixedLenFeature([], tf.int64)
         }
         # Create a list of filenames and pass it to a queue
-        filename_queue = tf.train.string_input_producer([data_path], num_epochs=num_epochs)
+        filename_queue = tf.train.string_input_producer([tfrecord_file], num_epochs=num_epochs)
         # Define a reader and read the next record
         reader = tf.TFRecordReader()
         _, serialized_example = reader.read(filename_queue)
@@ -53,7 +54,7 @@ def inputs(
         image = tf.decode_raw(features['image'], tf.float32)
 
         # Cast label data into int32
-        label = tf.cast(features['label'], tf.int32)
+        label = tf.one_hot([tf.cast(features['label'], tf.int32)],depth=label_shape)
         # Reshape image data into the original shape
         image = tf.reshape(image, np.asarray(image_target_size))
 

@@ -21,10 +21,10 @@ class Config(object):
         self.model_input = ''
         self.train_summaries = ''
 
-        self.vgg16_weight_path = pjoin(
-            '/media/data_cifs/clicktionary/',
-            'pretrained_weights',
-            'vgg16.npy')
+        # self.vgg16_weight_path = pjoin(
+        #     '/media/data_cifs/clicktionary/',
+        #     'pretrained_weights',
+        #     'vgg16.npy')
 
         #model settings
         self.model_type = 'vgg_regression_model_4fc'

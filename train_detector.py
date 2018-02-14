@@ -148,36 +148,34 @@ def main(config):
     gpuconfig.allow_soft_placement = True
 
     with tf.Session(config=gpuconfig) as sess:
-        sess.run( tf.group(
-            tf.global_variables_initializer(),
-            tf.local_variables_initializer()) )
+        #init_op = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
+        #sess.run(init_op)
+        sess.run(tf.local_variables_initializer())
+        sess.run(tf.global_variables_initializer())
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(coord=coord)
+        #import ipdb; ipdb.set_trace()
+        batch_images, batch_labels = sess.run([train_images, train_labels])
+
         step = 0
-        try:
-            while not coord.should_stop():
-                #batch = mnist.train.next_batch(50)
-                train_step.run(feed_dict={x: train_images, y_: train_labels, keep_prob: 0.5})
-                if step % 100 == 0:
-                    train_accuracy = accuracy.eval(feed_dict={
-                        x: train_images, y_: train_labels, keep_prob: 1.0})
-                    print('step %d, training accuracy %g' % (step, train_accuracy))
-                step += 1
-                # print(val_images.shape, val_labels.shape)
-                # print('validation accuracy %g' % accuracy.eval(feed_dict={
-                #     x: val_images, y_: val_labels, keep_prob: 1.0}))
-        except tf.errors.OutofRangeError:
-            print ("Finished training for %d epochs"%config.epochs)
-        finally:
-            coord.request_stop()
+        # try:
+        #     while not coord.should_stop():
+        #         train_step.run(feed_dict={x: batch_images, y_: batch_labels, keep_prob: 0.5})
+        #         if step % 100 == 0:
+        #             train_accuracy = accuracy.eval(feed_dict={
+        #                 x: batch_images, y_: batch_labels, keep_prob: 1.0})
+        #             print('step %d, training accuracy %g' % (step, train_accuracy))
+        #         step += 1
+        #         # print(val_images.shape, val_labels.shape)
+        #         # print('validation accuracy %g' % accuracy.eval(feed_dict={
+        #         #     x: val_images, y_: val_labels, keep_prob: 1.0}))
+        # except tf.errors.OutOfRangeError:
+        #     print ("Finished training for %d epochs"%config.epochs)
+        # finally:
+        coord.request_stop()
         coord.join(threads)
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--data_dir', type=str,
-                        default='/tmp/tensorflow/mnist/input_data',
-                        help='Directory for storing input data')
-    FLAGS, unparsed = parser.parse_known_args()
     config = config.Config()
     main(config)
     #tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)

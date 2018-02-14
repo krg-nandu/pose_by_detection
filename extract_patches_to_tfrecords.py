@@ -103,7 +103,7 @@ def main(
                                              locations=jnts,
                                              objects_to_include=objects_to_include,
                                              joints=config.joints_to_extract,
-                                             patch_size=config.image_target_size[:,:,0])
+                                             patch_size=config.image_target_size[:2])
         all_patches.extend(patches)
         all_labels.extend(labels)
         frameid = frameid + 1
@@ -119,7 +119,7 @@ def main(
 
     all_patches = np.asarray(all_patches)[arr]
     all_labels = np.asarray(all_labels)[arr]
-    assert (np.sum(data_prop.values()) != 1.), 'Train vs Test split specified incorrectly'
+    #assert (np.sum(data_prop.values()) != 1.), 'Train vs Test split specified incorrectly'
 
     train_idx_lim = int(data_prop['train'] * total_items)
     val_idx_lim = int((data_prop['train'] + data_prop['val']) * total_items)

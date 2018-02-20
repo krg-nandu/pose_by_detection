@@ -22,11 +22,11 @@ def write_tfrecord(
         tf_filename))
     for i in tqdm.tqdm(range(len(images))):
         #feature = {'label': _int64_feature(labels[i]),
-        #           'image': _bytes_feature(tf.compat.as_bytes(images[i].tostring()))}
-        feature = {'label': _bytes_feature(tf.compat.as_bytes(labels[i].tostring())),
-                   'image': _bytes_feature(tf.compat.as_bytes(images[i].tostring()))}
-    example = tf.train.Example(features=tf.train.Features(feature=feature))
-    writer.write(example.SerializeToString())
+        #           'image': _bytes_feature(images[i].tostring())}
+        feature = {'label': _bytes_feature(labels[i].tostring()),
+                   'image': _bytes_feature(images[i].tostring())}
+        example = tf.train.Example(features=tf.train.Features(feature=feature))
+        writer.write(example.SerializeToString())
 
     writer.close()
 

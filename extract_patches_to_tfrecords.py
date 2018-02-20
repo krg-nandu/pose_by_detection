@@ -32,17 +32,18 @@ def make_image_patches(
             # get the positive example
             patch = rgb_frame[(x - patch_size[0] / 2 - 1):(x + patch_size[0] / 2 - 1),
                     (y - patch_size[1] / 2 - 1):(y + patch_size[1] / 2 - 1), :]
-            patches.append(patch)
-            labels.append(jnt + 1)
-
+            patches.append(patch.astype(np.float32))
+            labels.append(np.float32(jnt + 1))
+            #plt.imshow(patch)
+            #plt.show()
             # also get a corrsponding negative example
             random_noise = np.random.randint(20, size=3)
             bg_patch = rgb_frame[
                        (x + random_noise[0] - patch_size[0] / 2 - 1):(x + random_noise[0] + patch_size[0] / 2 - 1),
                        (y + random_noise[1] - patch_size[1] / 2 - 1):(y + random_noise[1] + patch_size[1] / 2 - 1), :]
             # plt.imshow(bg_patch); plt.show();
-            patches.append(bg_patch)
-            labels.append(0)
+            patches.append(bg_patch.astype(np.float32))
+            labels.append(np.float32(0))
     return patches, labels
 
 
@@ -98,6 +99,7 @@ def main(
         assert flag, 'Reading from video has failed!'
 
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
         patches, labels = make_image_patches(rgb_frame=rgb_frame,
                                              frameid=frameid,
                                              locations=jnts,

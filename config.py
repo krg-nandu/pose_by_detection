@@ -5,7 +5,7 @@ class Config(object):
         self.base_dir = '/media/data_cifs/ruth/6October17'
         self.video_name = 'context.avi'
         self.label_dir = '/media/data_cifs/lakshmi/zebrafish/groundtruths/'
-        self.tfrecord_dir = '/media/data_cifs/lakshmi/tfrecords/'
+        self.tfrecord_dir = '/media/data_cifs/lakshmi/zebrafish/tfrecords/'
 
         self.objects_to_include = [0,1,2,3,4,5] #fish ids to use!
         self.joints_to_extract = [0]

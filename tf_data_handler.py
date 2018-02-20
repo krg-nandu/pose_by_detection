@@ -38,20 +38,16 @@ def inputs(
         image_target_size,
         label_shape,
         batch_size):
-    # import ipdb; ipdb.set_trace();
+
     with tf.name_scope('input'):
         if os.path.exists(tfrecord_file) is False:
             print("{} not exists".format(tfrecord_file))
-            # feature = {
-            #    'label': tf.FixedLenFeature([], tf.int64),
-            #    'image': tf.FixedLenFeature([], tf.string)
-            # }
         feature = {
             'label': tf.FixedLenFeature([], tf.string),
             'image': tf.FixedLenFeature([], tf.string)
         }
         # Create a list of filenames and pass it to a queue
-        filename_queue = tf.train.string_input_producer([tfrecord_file], num_epochs=None)
+        filename_queue = tf.train.string_input_producer([tfrecord_file], num_epochs=num_epochs)
         # Define a reader and read the next record
         reader = tf.TFRecordReader()
         _, serialized_example = reader.read(filename_queue)
@@ -62,10 +58,14 @@ def inputs(
         label = tf.decode_raw(features['label'], tf.float32)
 
         # Cast label data into int32
-        #label = tf.one_hot(tf.cast(features['label'], tf.int32),depth=label_shape)
+        label.set_shape(1)
+        '''
+        this is for one-hot encoding. better to use it online during training
+        '''
+        #label = tf.one_hot(tf.cast(label, tf.int32),depth=label_shape)
+
         # Reshape image data into the original shape
         image = tf.reshape(image, np.asarray(image_target_size))
-        label.set_shape(label_shape)
 
         # Creates batches by randomly shuffling tensors
         images, labels = tf.train.batch([image, label], batch_size=batch_size, capacity=30,

@@ -25,11 +25,11 @@ def deepnn(x):
     # Last dimension is for "features" - there is only one here, since images are
     # grayscale -- it would be 3 for an RGB image, 4 for RGBA, etc.
     with tf.name_scope('reshape'):
-        x_image = tf.reshape(x, [-1, 28, 28, 1])
+        x_image = tf.reshape(x, [-1, 28, 28, 3])
 
     # First convolutional layer - maps one grayscale image to 32 feature maps.
     with tf.name_scope('conv1'):
-        W_conv1 = weight_variable([5, 5, 1, 32])
+        W_conv1 = weight_variable([5, 5, 3, 32])
         b_conv1 = bias_variable([32])
         h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
 
@@ -62,10 +62,10 @@ def deepnn(x):
         keep_prob = tf.placeholder(tf.float32)
         h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
 
-    # Map the 1024 features to 10 classes, one for each digit
+    # Map the 1024 features to "numclass" classes, one for each digit
     with tf.name_scope('fc2'):
-        W_fc2 = weight_variable([1024, 10])
-        b_fc2 = bias_variable([10])
+        W_fc2 = weight_variable([1024, 2])
+        b_fc2 = bias_variable([2])
 
         y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
     return y_conv, keep_prob
@@ -96,18 +96,14 @@ def bias_variable(shape):
 
 def main(config):
     # import ipdb; ipdb.set_trace();
-    # Import data
-    #mnist = input_data.read_data_sets(FLAGS.data_dir)
-
     # Create the model
-    x = tf.placeholder(tf.float32, [None, 784])
-
-    # Define loss and optimizer
-    y_ = tf.placeholder(tf.int64, [None])
+    x = tf.placeholder(tf.float32, [None, config.image_target_size[0],config.image_target_size[1],config.image_target_size[2]])
+    y_ = tf.placeholder(tf.int64, [None,1])
 
     # Build the graph for the deep net
     y_conv, keep_prob = deepnn(x)
 
+    # Define loss and optimizer
     with tf.name_scope('loss'):
         cross_entropy = tf.losses.sparse_softmax_cross_entropy(
             labels=y_, logits=y_conv)
@@ -148,32 +144,30 @@ def main(config):
     gpuconfig.allow_soft_placement = True
 
     with tf.Session(config=gpuconfig) as sess:
-        #init_op = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
-        #sess.run(init_op)
-        sess.run(tf.local_variables_initializer())
-        sess.run(tf.global_variables_initializer())
+        init_op = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
+        sess.run(init_op)
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(coord=coord)
-        #import ipdb; ipdb.set_trace()
+        #import ipdb; ipdb.set_trace();
         batch_images, batch_labels = sess.run([train_images, train_labels])
 
         step = 0
-        # try:
-        #     while not coord.should_stop():
-        #         train_step.run(feed_dict={x: batch_images, y_: batch_labels, keep_prob: 0.5})
-        #         if step % 100 == 0:
-        #             train_accuracy = accuracy.eval(feed_dict={
-        #                 x: batch_images, y_: batch_labels, keep_prob: 1.0})
-        #             print('step %d, training accuracy %g' % (step, train_accuracy))
-        #         step += 1
-        #         # print(val_images.shape, val_labels.shape)
-        #         # print('validation accuracy %g' % accuracy.eval(feed_dict={
-        #         #     x: val_images, y_: val_labels, keep_prob: 1.0}))
-        # except tf.errors.OutOfRangeError:
-        #     print ("Finished training for %d epochs"%config.epochs)
-        # finally:
-        coord.request_stop()
-        coord.join(threads)
+        try:
+            while not coord.should_stop():
+                train_step.run(feed_dict={x: batch_images, y_: batch_labels, keep_prob: 0.5})
+                if step % 10 == 0:
+                    train_accuracy = accuracy.eval(feed_dict={
+                        x: batch_images, y_: batch_labels, keep_prob: 1.0})
+                    print('step %d, training accuracy %g' % (step, train_accuracy))
+                step += 1
+                # print(val_images.shape, val_labels.shape)
+                # print('validation accuracy %g' % accuracy.eval(feed_dict={
+                #     x: val_images, y_: val_labels, keep_prob: 1.0}))
+        except tf.errors.OutOfRangeError:
+            print("Finished training for %d epochs" % config.epochs)
+        finally:
+            coord.request_stop()
+            coord.join(threads)
 
 if __name__ == '__main__':
     config = config.Config()

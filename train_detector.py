@@ -62,6 +62,8 @@ class cnn_model_struct:
         with tf.name_scope('dropout'):
             if train_mode == True:
                 h_fc1_drop = tf.nn.dropout(h_fc1, 0.7)
+            else:
+                h_fc1_drop = tf.nn.dropout(h_fc1, 1.0)
 
         # Map the 1024 features to "numclass" classes, one for each digit
         with tf.name_scope('fc2'):

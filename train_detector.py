@@ -191,7 +191,10 @@ def main(config):
                     train_writer.add_summary(summary_str,step)
                 # save the model check point
                 if step % 1000 == 0:
-                    saver.save(sess,'somepathhere',global_step=step)
+                    saver.save(sess,os.path.join(
+                        config.model_output,
+                        config.model_name+'_'+str(step)+'.ckpt'
+                    ),global_step=step)
 
         except tf.errors.OutOfRangeError:
             print("Finished training for %d epochs" % config.epochs)

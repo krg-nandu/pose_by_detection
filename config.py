@@ -1,3 +1,5 @@
+import os
+
 class Config(object):
 
     def __init__(self):
@@ -21,10 +23,10 @@ class Config(object):
         self.model_input = ''
         self.train_summaries = ''
 
-        # self.vgg16_weight_path = pjoin(
-        #     '/media/data_cifs/clicktionary/',
-        #     'pretrained_weights',
-        #     'vgg16.npy')
+        self.vgg16_weight_path = os.path.join(
+             '/media/data_cifs/clicktionary/',
+             'pretrained_weights',
+             'vgg16.npy')
 
         #model settings
         self.model_type = 'vgg_regression_model_4fc'
@@ -33,6 +35,9 @@ class Config(object):
         #self.label_shape = 36
         self.train_batch = 32
         self.val_batch= 32
+        self.model_output = '/media/data_cifs/lakshmi/summaries/'
+        self.model_name = 'cnn_v1'
+
         #self.initialize_layers = ['fc6', 'fc7', 'pre_fc8', 'fc8']
         #self.fine_tune_layers = ['fc6', 'fc7', 'pre_fc8', 'fc8']
         #self.batch_norm = ['conv1','fc1','fc2']

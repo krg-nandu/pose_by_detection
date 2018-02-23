@@ -30,6 +30,27 @@ def write_tfrecord(
 
     writer.close()
 
+def fliplr(x):
+    return tf.image.flip_left_right(x)
+
+def flipud(x):
+    return tf.image.flip_up_down(x)
+
+def adjust_bright(x):
+    return tf.image.random_brightness(x,max_delta=0.5)
+
+def no_aug(x):
+    return x
+
+def augment_patch(patch):
+    options = {
+        0: fliplr,
+        1: flipud,
+        2: adjust_bright,
+        3: no_aug,
+    }
+    aug_method = np.random.randint(4, size=1)
+    return options[aug_method[0]](patch)
 
 # establish the data queue
 def inputs(
@@ -37,7 +58,8 @@ def inputs(
         num_epochs,
         image_target_size,
         label_shape,
-        batch_size):
+        batch_size,
+        augmentation=False):
 
     with tf.name_scope('input'):
         if os.path.exists(tfrecord_file) is False:
@@ -59,13 +81,19 @@ def inputs(
 
         # Cast label data into int32
         label.set_shape(1)
+        label = tf.cast(tf.reshape(label,[]),tf.int64)
+        #label = tf.cast(feature['label'],tf.int32)
         '''
         this is for one-hot encoding. better to use it online during training
         '''
         #label = tf.one_hot(tf.cast(label, tf.int32),depth=label_shape)
 
         # Reshape image data into the original shape
-        image = tf.reshape(image, np.asarray(image_target_size))
+        image = tf.reshape(image, np.asarray(image_target_size))/255.
+        # for the training images, do some data augmentation
+        if augmentation:
+            image = augment_patch(image)
+            image = tf.reshape(image, np.asarray(image_target_size))
 
         # Creates batches by randomly shuffling tensors
         images, labels = tf.train.batch([image, label], batch_size=batch_size, capacity=30,

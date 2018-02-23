@@ -28,11 +28,11 @@ class Config(object):
 
         #model settings
         self.model_type = 'vgg_regression_model_4fc'
-        self.epochs = 10
+        self.epochs = 100
         self.image_target_size = [28,28,3]
         #self.label_shape = 36
-        self.train_batch = 1
-        self.val_batch= 1
+        self.train_batch = 32
+        self.val_batch= 32
         #self.initialize_layers = ['fc6', 'fc7', 'pre_fc8', 'fc8']
         #self.fine_tune_layers = ['fc6', 'fc7', 'pre_fc8', 'fc8']
         #self.batch_norm = ['conv1','fc1','fc2']

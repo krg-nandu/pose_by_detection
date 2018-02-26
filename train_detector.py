@@ -30,51 +30,51 @@ class cnn_model_struct:
 
         # First convolutional layer - maps one grayscale image to 32 feature maps.
         with tf.name_scope('conv1'):
-            W_conv1 = self.weight_variable([5, 5, 3, 32])
-            b_conv1 = self.bias_variable([32])
-            h_conv1 = tf.nn.relu(self.conv2d(x_image, W_conv1) + b_conv1)
+            self.W_conv1 = self.weight_variable([5, 5, 3, 32],var_name='wconv1')
+            self.b_conv1 = self.bias_variable([32],var_name='bconv1')
+            self.h_conv1 = tf.nn.relu(self.conv2d(x_image, self.W_conv1) + self.b_conv1)
 
         # Pooling layer - downsamples by 2X.
         with tf.name_scope('pool1'):
-            h_pool1 = self.max_pool_2x2(h_conv1)
+            self.h_pool1 = self.max_pool_2x2(self.h_conv1)
 
         # Second convolutional layer -- maps 32 feature maps to 64.
         with tf.name_scope('conv2'):
-            W_conv2 = self.weight_variable([5, 5, 32, 64])
-            b_conv2 = self.bias_variable([64])
-            h_conv2 = tf.nn.relu(self.conv2d(h_pool1, W_conv2) + b_conv2)
+            self.W_conv2 = self.weight_variable([5, 5, 32, 64],var_name='wconv2')
+            self.b_conv2 = self.bias_variable([64],var_name='bconv2')
+            self.h_conv2 = tf.nn.relu(self.conv2d(self.h_pool1, self.W_conv2) + self.b_conv2)
 
         # Second pooling layer.
         with tf.name_scope('pool2'):
-            h_pool2 = self.max_pool_2x2(h_conv2)
+            self.h_pool2 = self.max_pool_2x2(self.h_conv2)
 
         # Fully connected layer 1 -- after 2 round of downsampling, our 28x28 image
         # is down to 7x7x64 feature maps -- maps this to 1024 features.
         with tf.name_scope('fc1'):
-            W_fc1 = self.weight_variable([7 * 7 * 64, 1024])
-            b_fc1 = self.bias_variable([1024])
+            self.W_fc1 = self.weight_variable([7 * 7 * 64, 1024],var_name='wfc1')
+            self.b_fc1 = self.bias_variable([1024],var_name='bfc1')
 
-            h_pool2_flat = tf.reshape(h_pool2, [-1, 7 * 7 * 64])
-            h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
+            self.h_pool2_flat = tf.reshape(self.h_pool2, [-1, 7 * 7 * 64])
+            self.h_fc1 = tf.nn.relu(tf.matmul(self.h_pool2_flat, self.W_fc1) + self.b_fc1)
 
         # Dropout - controls the complexity of the model, prevents co-adaptation of
         # features.
         with tf.name_scope('dropout'):
             if train_mode == True:
-                h_fc1_drop = tf.nn.dropout(h_fc1, 0.7)
+                self.h_fc1_drop = tf.nn.dropout(self.h_fc1, 0.7)
             else:
-                h_fc1_drop = tf.nn.dropout(h_fc1, 1.0)
+                self.h_fc1_drop = tf.nn.dropout(self.h_fc1, 1.0)
 
         # Map the 1024 features to "numclass" classes, one for each digit
         with tf.name_scope('fc2'):
-            W_fc2 = self.weight_variable([1024, output_shape])
-            b_fc2 = self.bias_variable([output_shape])
+            self.W_fc2 = self.weight_variable([1024, output_shape],var_name='wfc2')
+            self.b_fc2 = self.bias_variable([output_shape],var_name='bfc2')
 
-            y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
-            y_conv = tf.nn.sigmoid(y_conv)
+            self.y_conv = tf.matmul(self.h_fc1_drop, self.W_fc2) + self.b_fc2
+            self.y_conv = tf.nn.sigmoid(self.y_conv)
         #return y_conv, keep_prob
         #return y_conv
-        self.output = tf.identity(y_conv,name="output")
+        self.output = tf.identity(self.y_conv,name="output")
 
     def conv2d(self, x, W):
         """conv2d returns a 2d convolution layer with full stride."""
@@ -86,15 +86,15 @@ class cnn_model_struct:
         return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],
                               strides=[1, 2, 2, 1], padding='SAME')
 
-    def weight_variable(self, shape):
+    def weight_variable(self, shape, var_name):
         """weight_variable generates a weight variable of a given shape."""
         initial = tf.truncated_normal(shape, stddev=0.1)
-        return tf.Variable(initial)
+        return tf.get_variable(name=var_name,initializer=initial)
 
-    def bias_variable(self, shape):
+    def bias_variable(self, shape, var_name):
         """bias_variable generates a bias variable of a given shape."""
         initial = tf.constant(0.001, shape=shape)
-        return tf.Variable(initial)
+        return tf.get_variable(name=var_name,initializer=initial)
 
 def main(config):
     train_data = os.path.join(config.tfrecord_dir, config.train_tfrecords)
@@ -145,17 +145,17 @@ def main(config):
                 correct_prediction = tf.cast(correct_prediction, tf.float32)
             accuracy = tf.reduce_mean(correct_prediction)
 
-            print ("using validation")
+            print("using validation")
             scope.reuse_variables()
             val_model = cnn_model_struct()
-            val_model.build(val_images,config.num_classes,train_mode=False)
-            val_results = tf.argmax(val_model.output,1)
-            val_error = tf.reduce_mean(tf.cast(tf.equal(val_results,tf.cast(val_labels,tf.int64)),tf.float32))
+            val_model.build(val_images, config.num_classes, train_mode=False)
+            val_results = tf.argmax(val_model.output, 1)
+            val_error = tf.reduce_mean(tf.cast(tf.equal(val_results, tf.cast(val_labels, tf.int64)), tf.float32))
 
-            tf.summary.scalar("loss",cross_entropy)
-            tf.summary.scalar("train error",accuracy)
-            tf.summary.scalar("validation error",val_error)
-            summary_op=tf.summary.merge_all()
+            tf.summary.scalar("loss", cross_entropy)
+            tf.summary.scalar("train error", accuracy)
+            tf.summary.scalar("validation error", val_error)
+            summary_op = tf.summary.merge_all()
         saver = tf.train.Saver(tf.global_variables())
 
     gpuconfig = tf.ConfigProto()

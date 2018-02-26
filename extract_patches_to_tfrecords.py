@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tf_data_handler import write_tfrecord
 import config
+import progressbar
 
 """
 Extract local regions around a landmark and give the appropriate label
@@ -92,6 +93,8 @@ def main(
     # Load in the video to read
     video_stream = cv2.VideoCapture(os.path.join(video_folder, video_name))
     frameid = 0
+    max_lim = 10000
+    bar = progressbar.ProgressBar(max_value=max_lim)
 
     print 'Reading from video...'
     while (video_stream.isOpened()):
@@ -109,7 +112,8 @@ def main(
         all_patches.extend(patches)
         all_labels.extend(labels)
         frameid = frameid + 1
-        if frameid == 100:
+        bar.update(frameid)
+        if frameid == max_lim:
             break
 
     print 'Finished reading from video. Making train vs test split'

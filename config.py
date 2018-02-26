@@ -35,6 +35,8 @@ class Config(object):
         #self.label_shape = 36
         self.train_batch = 32
         self.val_batch= 32
+        self.test_batch = 64
+
         self.model_output = '/media/data_cifs/lakshmi/zebrafish/summaries/'
         self.model_name = 'cnn_v1'
 

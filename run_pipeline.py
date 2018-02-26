@@ -1,12 +1,12 @@
 import config
-from train_detector import train_model, test_model_from_tfrecords
+from train_detector import train_model, test_model_eval
 import argparse
 
 def main(train_mode=False):
     if train_mode:
         train_model(config.Config())
     else:
-        test_model_from_tfrecords(config.Config())
+        test_model_eval(config.Config())
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

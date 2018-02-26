@@ -204,5 +204,43 @@ def train_model(config):
             coord.request_stop()
             coord.join(threads)
 
-def test_model_from_tfrecords(config):
-    print('hi')
+def test_model_eval(config):
+    test_data = os.path.join(config.tfrecord_dir, config.test_tfrecords)
+    with tf.device('/cpu:0'):
+        test_images, test_labels = inputs(tfrecord_file=test_data,
+                                            num_epochs=None,
+                                            image_target_size=config.image_target_size,
+                                            label_shape=config.num_classes,
+                                            batch_size=config.test_batch,
+                                            augmentation=False)
+
+    with tf.device('/gpu:0'):
+        with tf.variable_scope("model") as scope:
+            model = cnn_model_struct()
+            model.build(test_images,config.num_classes,train_mode=False)
+            results = tf.argmax(model.output, 1)
+            error = tf.reduce_mean(tf.cast(tf.equal(results, tf.cast(test_labels, tf.int64)), tf.float32))
+
+        gpuconfig = tf.ConfigProto()
+        gpuconfig.gpu_options.allow_growth = True
+        gpuconfig.allow_soft_placement = True
+        saver = tf.train.Saver()
+
+        with tf.Session(config=gpuconfig) as sess:
+            #init_op = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
+            #sess.run(init_op)
+            coord = tf.train.Coordinator()
+            threads = tf.train.start_queue_runners(coord=coord)
+            step=0
+            try:
+                while not coord.should_stop():
+                    # load the model here
+                    ckpts=tf.train.latest_checkpoint(config.model_output)
+                    saver.restore(sess,ckpts)
+                    ims, labs, probs, err, res = sess.run([test_images,test_labels,model.output,error,results])
+                    import ipdb; ipdb.set_trace();
+            except tf.errors.OutOfRangeError:
+                print('Epoch limit reached!')
+            finally:
+                coord.request_stop()
+            coord.join(threads)

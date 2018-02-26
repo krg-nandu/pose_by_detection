@@ -188,8 +188,8 @@ def main(config):
                 if step % 200 == 0:
                     vl_img, vl_lab, vl_res, vl_err = sess.run([val_images,val_labels,val_results,val_error])
                     print("\t val error = {}".format(vl_err))
-
-                    summary_str = sess.run([summary_op])
+                    import ipdb; ipdb.set_trace();
+                    summary_str = sess.run(summary_op)
                     train_writer.add_summary(summary_str,step)
                 # save the model check point
                 if step % 1000 == 0:

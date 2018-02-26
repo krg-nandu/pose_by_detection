@@ -35,7 +35,7 @@ class Config(object):
         #self.label_shape = 36
         self.train_batch = 32
         self.val_batch= 32
-        self.model_output = '/media/data_cifs/lakshmi/summaries/'
+        self.model_output = '/media/data_cifs/lakshmi/zebrafish/summaries/'
         self.model_name = 'cnn_v1'
 
         #self.initialize_layers = ['fc6', 'fc7', 'pre_fc8', 'fc8']

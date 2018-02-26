@@ -30,7 +30,7 @@ class Config(object):
 
         #model settings
         self.model_type = 'vgg_regression_model_4fc'
-        self.epochs = 100
+        self.epochs = 50
         self.image_target_size = [28,28,3]
         #self.label_shape = 36
         self.train_batch = 32

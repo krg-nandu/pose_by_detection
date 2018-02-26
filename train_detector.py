@@ -96,7 +96,7 @@ class cnn_model_struct:
         initial = tf.constant(0.001, shape=shape)
         return tf.get_variable(name=var_name,initializer=initial)
 
-def main(config):
+def train_model(config):
     train_data = os.path.join(config.tfrecord_dir, config.train_tfrecords)
     val_data = os.path.join(config.tfrecord_dir, config.val_tfrecords)
 
@@ -188,7 +188,7 @@ def main(config):
                 if step % 200 == 0:
                     vl_img, vl_lab, vl_res, vl_err = sess.run([val_images,val_labels,val_results,val_error])
                     print("\t val error = {}".format(vl_err))
-                    import ipdb; ipdb.set_trace();
+                    #import ipdb; ipdb.set_trace();
                     summary_str = sess.run(summary_op)
                     train_writer.add_summary(summary_str,step)
                 # save the model check point
@@ -204,7 +204,5 @@ def main(config):
             coord.request_stop()
             coord.join(threads)
 
-if __name__ == '__main__':
-    config = config.Config()
-    main(config)
-    #tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
+def test_model_from_tfrecords(config):
+    print('hi')

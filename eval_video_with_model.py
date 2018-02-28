@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import progressbar
 import tensorflow as tf
 from train_detector import cnn_model_struct
+import tqdm
 
 class Tester:
     def __init__(self,config):
@@ -60,11 +61,18 @@ def get_and_test_patches(
     tester = Tester(config=config)
     patches = []
     sz = rgb_frame.shape
+
     half_win_width, half_win_height = config.image_target_size[0]/2, config.image_target_size[1]/2
     counter = 0
-
-    for x in range(half_win_width+1,sz[0]-half_win_width-1):
-        for y in range(half_win_height+1,sz[1]-half_win_height-1):
+    #start_x, end_x = 700, 730
+    #start_y, end_y = 126, 156
+    start_x, end_x = 700, 1050
+    start_y, end_y = 126, 522
+    # start_x, end_x = half_win_width+1, sz[0]-half_win_width-1
+    # start_y, end_y = half_win_height+1,sz[1]-half_win_height-1
+    results = []
+    for x in tqdm.tqdm(range(start_x, end_x)):
+        for y in range(start_y, end_y):
             patch = rgb_frame[(x - half_win_width - 1):(x + half_win_width - 1),
                     (y - half_win_height - 1):(y + half_win_height - 1), :]
             patches.append(patch.astype(np.float32))
@@ -73,8 +81,20 @@ def get_and_test_patches(
             #plt.show()
             if counter%config.test_batch == 0:
                 probs = tester.make_predictions(patches=patches)
-                print probs
-                import ipdb; ipdb.set_trace()
+                results.append(probs)
+                patches= []
+    if patches != []:
+        probs = tester.make_predictions(patches=patches)
+        results.append(probs)
+
+    import ipdb; ipdb.set_trace()
+    vis_res = np.reshape(np.concatenate(results,axis=0)[:,1],[end_x-start_x,end_y-start_y])
+    plt.subplot(121)
+    plt.imshow(vis_res)
+    plt.subplot(122)
+    plt.imshow(rgb_frame[start_x:end_x,start_y:end_y,:])
+    plt.show()
+    print ('end of function')
 
 
 def eval_video_with_model(config=None):

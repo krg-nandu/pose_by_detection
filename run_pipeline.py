@@ -1,7 +1,7 @@
 import config
 from train_detector import train_model, test_model_eval
 import argparse
-import eval_video_with_model
+from eval_video_with_model import eval_video_with_model
 
 def main(train_mode=False,
          test_video=False):

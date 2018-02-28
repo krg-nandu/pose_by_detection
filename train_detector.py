@@ -245,33 +245,34 @@ def test_model_eval(config):
                 coord.request_stop()
             coord.join(threads)
 
-def get_model_predictions(config,patches):
-    input = tf.placeholder(tf.float32, [None,config.image_target_size[0],config.image_target_size[1],config.image_target_size[2]], name='ip_placeholder')
-    with tf.device('/gpu:0'):
-        with tf.variable_scope("model") as scope:
-            model = cnn_model_struct()
-            model.build(input,config.num_classes,train_mode=False)
-
-        gpuconfig = tf.ConfigProto()
-        gpuconfig.gpu_options.allow_growth = True
-        gpuconfig.allow_soft_placement = True
-        saver = tf.train.Saver()
-
-        with tf.Session(config=gpuconfig) as sess:
-            #init_op = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
-            #sess.run(init_op)
-            coord = tf.train.Coordinator()
-            threads = tf.train.start_queue_runners(coord=coord)
-            step=0
-            try:
-                while not coord.should_stop():
-                    # load the model here
-                    ckpts=tf.train.latest_checkpoint(config.model_output)
-                    saver.restore(sess,ckpts)
-                    ims, probs = sess.run(model.output,feed_dict={input:patches})
-            except tf.errors.OutOfRangeError:
-                print('Epoch limit reached!')
-            finally:
-                coord.request_stop()
-            coord.join(threads)
-    return probs
+# def get_model_predictions(config,patches):
+#     input = tf.placeholder(tf.float32, [None,config.image_target_size[0],config.image_target_size[1],config.image_target_size[2]], name='ip_placeholder')
+#     with tf.device('/gpu:0'):
+#         with tf.variable_scope("model") as scope:
+#             model = cnn_model_struct()
+#             model.build(input,config.num_classes,train_mode=False)
+#
+#         gpuconfig = tf.ConfigProto()
+#         gpuconfig.gpu_options.allow_growth = True
+#         gpuconfig.allow_soft_placement = True
+#         saver = tf.train.Saver()
+#
+#         with tf.Session(config=gpuconfig) as sess:
+#             #init_op = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
+#             #sess.run(init_op)
+#             #coord = tf.train.Coordinator()
+#             #threads = tf.train.start_queue_runners(coord=coord)
+#             step=0
+#             try:
+#                 #while not coord.should_stop():
+#                     # load the model here
+#                     ckpts=tf.train.latest_checkpoint(config.model_output)
+#                     saver.restore(sess,ckpts)
+#                     probs = sess.run(model.output,feed_dict={input:patches})
+#             except tf.errors.OutOfRangeError:
+#                 print('Epoch limit reached!')
+#             finally:
+#                 #coord.request_stop()
+#                 print ('done')
+#             #coord.join(threads)
+#     return probs
